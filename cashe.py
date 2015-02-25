@@ -717,6 +717,10 @@ def _main():
     argp.add_option(
             '--sort-by', default="filename",
             help='what to sort list/info command by')
+    argp.add_option('--link', default=True, action='store_true',
+            help='try to link in load/save operations (default)')
+    argp.add_option('--copy-only', dest='link', action='store_false',
+            help='try to link in load/save operations')
     (opts, cmds) = argp.parse_args()
 
     if opts.sort_by not in ("filename", "size",
@@ -724,6 +728,9 @@ def _main():
         opts.sort_by = "filename"    
 
     objs = CAShe(opts.path)
+    if not opts.link:
+        objs.link = False
+
     cmd = "summary"
     if len(cmds) >= 1:
         if cmds[0] in all_cmds:
