@@ -1,0 +1,154 @@
+<?xml version='1.0'?> <!--*-nxml-*-->
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+"http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd">
+
+<refentry id="cashe">
+  <refentryinfo>
+    <title>cashe</title>
+    <productname>cashe</productname>
+
+    <authorgroup>
+      <author>
+        <contrib>Developer</contrib>
+        <firstname>James</firstname>
+        <surname>Antill</surname>
+        <email>james.antill@redhat.com</email>
+      </author>
+    </authorgroup>
+  </refentryinfo>
+
+  <refmeta>
+    <refentrytitle>cashe</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+
+  <refnamediv>
+    <refname>cashe</refname>
+    <refpurpose>Tool to access CAShe storage</refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>cashe <arg choice="req">COMMAND</arg> <arg choice="opt" rep="repeat">OPTIONS</arg></command>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+
+  <refsect1>
+    <title>Description</title>
+
+    <para>
+      View/alter objects within the a CAShe store.
+    </para>
+  </refsect1>
+
+  <refsect1>
+    <title>Commands</title>
+
+    <variablelist>
+      <varlistentry>
+        <term><command>list</command></term>
+        <listitem><para>List the entries in the CAShe store. Just displays
+                   a prefix, the checksum type, the checksum of the object
+                   and the size of the object.</para>
+
+        <para>
+          <command>--path</command> or <command>-p </command> to use another path to a CAShe, default is too use the system CAShe in /var/cashe/CAShe.
+        </para>
+
+        <para>
+          <command>--sort-by</command> to sort the entires listed by filename, atime, ctime, mtime or size.
+        </para>
+
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><command>info</command></term>
+        <listitem><para>List most of the information about the entries in the CAShe store.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><command>summary</command></term>
+        <listitem><para>Show summary information about all the entries in the CAShe store. There are three types of data: free (has no links and is new enough to be in the high/newer part of storage), old (has no links and is old) and used (has one or more links, so can't be deleted). </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><command>check</command></term>
+        <listitem><para>List the entries in the CAShe store, but also check that the objects are valid. A True/False is displayed instead of the size, but if the user has permission then the object is automaticaly removed if the check fails.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><command>config</command></term>
+        <listitem><para>Print the configuration information for the specified CAShe store, which is used for the cleanup operation.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><command>load</command></term>
+        <listitem><para>Load an object from the CAShe store to a specified filename.</para>
+        <para>
+          <command>--copy-only</command> don't try to link() the file.
+        </para>
+        <para>
+          <command>--link</command> try to link() the file.
+        </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><command>save</command></term>
+        <listitem><para>Save a specified filename to an object in the CAShe store.</para>
+        <para>
+          <command>--copy-only</command> don't try to link() the file.
+        </para>
+        <para>
+          <command>--link</command> try to link() the file.
+        </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><command>save-fast</command></term>
+        <listitem><para>Save a specified filename to an object in the CAShe store, given the specified checksum data (without any internal checking).</para>
+        <para>
+          <command>--copy-only</command> don't try to link() the file.
+        </para>
+        <para>
+          <command>--link</command> try to link() the file.
+        </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><command>unlink</command></term>
+        <listitem><para>Remove an object from the CAShe store.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><command>cleanup</command></term>
+        <listitem><para>Cleanup bjects from the CAShe store, given the specified (or default) configuration.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><command>help</command></term>
+        <listitem><para>Show the command line help for the cashe command.</para>
+        </listitem>
+      </varlistentry>
+
+    </variablelist>
+  </refsect1>
+
+  <refsect1>
+    <title>See Also</title>
+    <para>
+      <citerefentry><refentrytitle>dnf</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+      <citerefentry><refentrytitle>yum</refentrytitle><manvolnum>1</manvolnum></citerefentry>
+    </para>
+  </refsect1>
+
+</refentry>
