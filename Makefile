@@ -38,7 +38,7 @@ install-bin:
 
 install-doc: cashe.1
 	mkdir -p $(DESTDIR)/usr/share/man/man1
-	instal -m 644 cashe.1 $(DESTDIR)/usr/share/man/man1/cashe.1
+	install -m 644 cashe.1 $(DESTDIR)/usr/share/man/man1/cashe.1
 
 
 install: install-py install-bin install-doc
