@@ -494,83 +494,88 @@ class CAShe(object):
                         continue
                     yield self.get(T, filename)
 
-    def _get_config(self):
+    def _get_config_def(self):
         lo = 500 * 1000 * 1000
         hi = 2   * 1000 * 1000 * 1000
         age = 8 * 60 * 60 * 24
         sort_by = "atime"
+        return (lo, hi, age, sort_by)
 
+    def _get_config(self):
         try:
             data = open(self.path + "/config").readlines()
         except:
-            return (lo, hi, age, "atime")
+            return self._get_config_def()
 
         data = [x.lstrip() for x in data]
         data = [x for x in data if x and x[0] != '#']
-        if data:
-            data.pop(0)
-            for line in data:
-                vals = line.split('=')
-                if len(vals) != 2:
-                    continue # ignore errors ftw
-                key,val = vals
-                key = key.strip()
-                val = val.strip()
+        if not data:
+            return self._get_config_def()
 
-                mul = 1
+        lo, hi, age, sort_by = self._get_config_def()
 
-                if key == 'age':
-                    if val.endswith('w'):
-                        mul = 60*60*24*7
-                        val = val[:-1]
-                    elif val.endswith('d'):
-                        mul = 60*60*24
-                        val = val[:-1]
-                    elif val.endswith('h'):
-                        mul = 60*60
-                        val = val[:-1]
-                    elif val.endswith('m'):
-                        mul = 60
-                        val = val[:-1]
+        for line in data:
+            vals = line.split('=')
+            if len(vals) != 2:
+                continue # ignore errors ftw
+            key,val = vals
+            key = key.strip()
+            val = val.strip()
 
-                    try:
-                        val = float(val)
-                    except:
-                        continue
-                    age = int(val * mul)
-                    continue
+            mul = 1
 
-                if key == 'time':
-                    val = val.lower()
-                    if val in ("atime", "ctime", "mtime"):
-                        sort_by = val
-                    continue
-
-                if val.endswith('k') or val.endswith('K'):
-                    mul = 1000
+            if key == 'age':
+                if val.endswith('w'):
+                    mul = 60*60*24*7
                     val = val[:-1]
-                elif val.endswith('m') or val.endswith('M'):
-                    mul = 1000*1000
+                elif val.endswith('d'):
+                    mul = 60*60*24
                     val = val[:-1]
-                elif val.endswith('g') or val.endswith('G'):
-                    mul = 1000*1000*1000
+                elif val.endswith('h'):
+                    mul = 60*60
                     val = val[:-1]
-                elif val.endswith('t') or val.endswith('T'):
-                    mul = 1000*1000*1000*1000
-                    val = val[:-1]
-                elif val.endswith('p') or val.endswith('P'): # lol
-                    mul = 1000*1000*1000*1000*1000
+                elif val.endswith('m'):
+                    mul = 60
                     val = val[:-1]
 
                 try:
                     val = float(val)
                 except:
                     continue
+                age = int(val * mul)
+                continue
 
-                if key in ('older', 'lo', 'low'):
-                    lo = int(val * mul)
-                if key == ('newer', 'hi', 'high'):
-                    hi = int(val * mul)
+            if key == 'time':
+                val = val.lower()
+                if val in ("atime", "ctime", "mtime"):
+                    sort_by = val
+                continue
+
+            if val.endswith('k') or val.endswith('K'):
+                mul = 1000
+                val = val[:-1]
+            elif val.endswith('m') or val.endswith('M'):
+                mul = 1000*1000
+                val = val[:-1]
+            elif val.endswith('g') or val.endswith('G'):
+                mul = 1000*1000*1000
+                val = val[:-1]
+            elif val.endswith('t') or val.endswith('T'):
+                mul = 1000*1000*1000*1000
+                val = val[:-1]
+            elif val.endswith('p') or val.endswith('P'): # lol
+                mul = 1000*1000*1000*1000*1000
+                val = val[:-1]
+
+            try:
+                val = float(val)
+            except:
+                continue
+
+            if key in ('older', 'lo', 'low'):
+                lo = int(val * mul)
+            if key in ('newer', 'hi', 'high'):
+                hi = int(val * mul)
 
         if hi < lo:
             hi = lo
@@ -597,6 +602,7 @@ class CAShe(object):
                 size -= obj.size
                 deleted_num  += 1
                 deleted_size += obj.size
+                # print "JDBG:", obj
                 self.rm(obj)
             return (deleted_num, deleted_size)
 
@@ -711,7 +717,8 @@ def _main():
             yield obj
     all_cmds = ("summary", "list", "info", "check",
                 "load", "save", "save-fast", "unlink",
-                "cleanup",
+                "cleanup", "ls-extra", "rm-extra", "list-files", "recent", 
+                "rsync-from", "rsync-to", "rsync2",
                 "config", "help")
     argp = optparse.OptionParser(
             description='Access CAShe storage from the command line',
@@ -749,12 +756,18 @@ def _main():
             cmd = "help"
 
 
+    (lo, hi, age, tsort_by) = objs._get_config()
     if cmd == "config":
-        (lo, hi, age, tsort_by) = objs._get_config()
-        print "           Storage:", _ui_num(lo)
-        print "Storage (new data):", _ui_num(hi)
-        print "               Age:", _ui_age(age)
-        print "              Time:", tsort_by
+        (dlo, dhi, dage, dtsort_by) = objs._get_config_def()
+        def _dtxt(dconfig, config):
+            if dconfig == config:
+                return "def"
+            return "usr"
+        print "    Storage(%s):" % _dtxt(dlo, lo), _ui_num(lo)
+        print "New Storage(%s):" % _dtxt(dhi, hi), _ui_num(hi)
+        print "        Age(%s):" % _dtxt(dage, age), _ui_age(age)
+        print "       Time(%s):" % _dtxt(dtsort_by, tsort_by), tsort_by
+        print "       Path(%s):" %_dtxt("/var/cache/CAShe", objs.path),objs.path
 
     if cmd == "help":
         argp.print_help()
@@ -767,7 +780,6 @@ def _main():
         if len(cmds) >= 3:
             D = cmds[2]
 
-        (lo, hi, age, tsort_by) = objs._get_config()
         now = time.time()
         summary_data = {'used-objs' : 0,
                         'used-size' : 0,
@@ -819,7 +831,6 @@ def _main():
         _prnt_summary(Ts['.'])
 
     if cmd == "list":
-        (lo, hi, age, tsort_by) = objs._get_config()
         now = time.time()
         T, D = _get_T_D(cmds)
 
@@ -834,7 +845,6 @@ def _main():
                                        obj.checksum_data, _ui_num(obj.size))
 
     if cmd == "check":
-        (lo, hi, age, tsort_by) = objs._get_config()
         now = time.time()
         T, D = _get_T_D(cmds)
 
@@ -850,7 +860,6 @@ def _main():
                                        obj.checked_filename is not None)
 
     if cmd == "info":
-        (lo, hi, age, tsort_by) = objs._get_config()
         now = time.time()
         T, D = _get_T_D(cmds)
 
@@ -890,13 +899,20 @@ def _main():
             data     = _file2hexdigest(cmds[1], cmds[2])
             filename = cmds[2]
             checksum = False
-        elif len(cmds) == 4:
+        elif len(cmds) == 4 and len(cmds[2]) == _checksum_d_len[cmds[1]]:
             data     = cmds[2]
             filename = cmds[3]
             checksum = True
+        elif len(cmds) >= 4:
+            for filename in cmds[2:]:
+                data = _file2hexdigest(cmds[1], filename)
+                obj  = objs.get(cmds[1], data)
+                obj.save(filename, checksum=False)
+            data     = None
         else:
-            print >>sys.stderr, argp.prog, "save <type> [data] <filename>"
+            print >>sys.stderr, argp.prog, "save <type> [data] <filename> [...]"
             sys.exit(1)
+
         if data is not None:
             obj = objs.get(cmds[1], data)
             obj.save(filename, checksum=checksum)
@@ -920,6 +936,119 @@ def _main():
         print "--All--:"
         print "  Objs:", _ui_num(objs)
         print "  Size:", _ui_num(size)
+    if cmd in ("ls-extra", "rm-extra"):
+        def _y_extras():
+            for T in sorted(objs._objs):
+                subdirname = "%s/%s" % (objs.path, T)
+
+                for subfilename in _listdir(subdirname):
+                    path = "%s/%s" % (subdirname, subfilename)
+                    if len(subfilename) != 4:
+                        yield path
+                        continue
+                    if not _valid_checksum_data(subfilename):
+                        yield path
+                        continue
+                    for filename in _listdir(path):
+                        path = "%s/%s/%s" % (subdirname, subfilename, filename)
+                        if not filename.startswith(subfilename):
+                            yield path
+                            continue
+                        if len(filename) != _checksum_d_len[T]:
+                            yield path
+                            continue
+                        if not _valid_checksum_data(filename):
+                            yield path
+                            continue
+    if cmd == "ls-extra":
+        for f in _y_extras():
+            print f
+    if cmd == "rm-extra":
+        for f in _y_extras():
+            try:
+                if _unlink_f(f):
+                    print "rm", f
+                else:
+                    print " ** ", f
+                    continue
+            except OSError, e:
+                if e.errno == errno.EISDIR:
+                    shutil.rmtree(f, ignore_errors=True)
+                    print "rm -r", f
+            _try_rmdir(os.path.dirname(f))
+
+    if cmd == "list-files":
+        if opts.sort_by not in ("atime", "ctime", "mtime"):
+            opts.sort_by = "mtime"
+        T, D = _get_T_D(cmds)
+
+        for obj in _get_objs(objs, opts, T, D):
+            print obj.filename
+    if cmd == "recent":
+        if opts.sort_by not in ("atime", "ctime", "mtime"):
+            opts.sort_by = "mtime"
+        T, D = _get_T_D(cmds)
+
+        num = 10 # 20 for a normal term. but sha256 wraps the line
+        a1 = []
+        a2 = []
+        for obj in _get_objs(objs, opts, T, D):
+            a1.append(obj)
+            if len(a1) > num:
+                a2 = a1
+                a1 = []
+        for obj in a2[len(a1):]:
+            print obj.filename
+        for obj in a1:
+            print obj.filename
+
+    def _rsync_cmd(src, dst, src_local=False):
+        # "--exclude=config" ... just do checksum dirs
+        # --ignore-existing vs. --size-only ?
+        # "--ignore-missing-args" is what we want, but is fairly new
+        # rcmd = ["rsync", "--recursive", "--size-only", "--links"]
+        rcmd = ["rsync", "--recursive", "--ignore-existing", "--links"]
+        if opts.verbose:
+            rcmd.extend(["--verbose", "--progress"])
+        done = False
+        for chk in _checksum_d_len:
+            chkdir = "%s/%s" % (src, chk)
+            if src_local and not os.path.exists(chkdir):
+                continue
+            done = True
+            rcmd.append(chkdir)
+        if not done:
+            if opts.verbose:
+                print "empty CAShe:", src
+            return 0
+        rcmd.append(dst)
+        if opts.verbose:
+            print " ".join(rcmd)
+        return os.spawnlp(os.P_WAIT, rcmd[0], *rcmd)
+
+    if cmd in ("rsync-to", "rsync2"):
+        if len(cmds) != 2:
+            print >>sys.stderr, argp.prog, cmd, "<destination>"
+            sys.exit(1)
+
+        if cmds[1].endswith(":"):
+            cmds[1] = cmds[1] + objs.path
+
+        ret = _rsync_cmd(objs.path, cmds[1], src_local=True)
+        if ret:
+            sys.exit(ret)
+
+    if cmd == "rsync-from":
+        if len(cmds) != 2:
+            print >>sys.stderr, argp.prog, cmd, "<source>"
+            sys.exit(1)
+
+        if cmds[1].endswith(":"):
+            cmds[1] = cmds[1] + objs.path
+
+        ret = _rsync_cmd(cmds[1], objs.path)
+        if ret:
+            sys.exit(ret)
 
     if cmd == "checksum-file":
         if len(cmds) != 3:
