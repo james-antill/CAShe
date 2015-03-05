@@ -48,6 +48,14 @@ else:
     raise ImportError, 'broken hashlib'
 del ctype
 
+def _listdir(D):
+    try:
+        return os.listdir(D)
+    except OSError, e:
+        if e.errno in (errno.ENOENT, errno.ENOTDIR, errno.EACCES):
+            return []
+        raise
+
 def _unlink_f(filename):
     """ Call os.unlink, but don't die if the file isn't there. This is the main
         difference between "rm -f" and plain "rm". """
@@ -449,13 +457,13 @@ class CAShe(object):
     def get(self, checksum_type, checksum_data):
         T = _checksum_aliases.get(checksum_type, checksum_type)
         if T not in self._objs:
-            raise TypeError
+            raise TypeError, "Not a valid Checksum Type: %s" % T
 
         if checksum_data not in self._objs[T]:
             obj = CASheFileObj(self.path, checksum_type, checksum_data)
             obj.link = self.link
-            self._objs[obj.checksum_data] = obj
-        return self._objs[obj.checksum_data]
+            self._objs[T][obj.checksum_data] = obj
+        return self._objs[T][checksum_data]
 
     def rm(self, obj):
         obj.unlink()
@@ -464,20 +472,12 @@ class CAShe(object):
     def ls(self, checksum_type=None):
         checksum_type = _checksum_aliases.get(checksum_type, checksum_type)
 
-        def _listdir(D):
-            try:
-                return os.listdir(D)
-            except OSError, e:
-                if e.errno in (errno.ENOENT, errno.ENOTDIR, errno.EACCES):
-                    return []
-                raise
-
         for T in sorted(self._objs):
             if checksum_type is not None and checksum_type != T:
                 continue
 
             subdirname = "%s/%s" % (self.path, T)
-            
+
             for subfilename in _listdir(subdirname):
                 if len(subfilename) != 4:
                     continue
@@ -583,6 +583,7 @@ class CAShe(object):
         return True
 
     def cleanup(self):
+        import time
         (lo, hi, age, sort_by) = self._get_config()
 
         # http://www.grantjenks.com/docs/sortedcontainers/ ??
