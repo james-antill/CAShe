@@ -295,7 +295,10 @@ class Cashe_tests(unittest.TestCase):
         fwrite(x.path + "/config", "lo = 4 \n hi = 4\n")
         self.assertEqual((4, 4, 8 * 60 * 60 * 24, "atime"), x._get_config())
         x.cleanup()
-        self.assertEqual(3, len(list(x.ls())))
+        # It's usually 3, but if the times get really close it can be 2.
+        num = len(list(x.ls()))
+        self.assertTrue(num >= 2)
+        self.assertTrue(num <= 3)
 
 
 
