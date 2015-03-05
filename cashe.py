@@ -244,14 +244,16 @@ class CASheObj(object):
         checksum_type = _checksum_aliases.get(checksum_type, checksum_type)
 
         if checksum_type not in _checksum_d_len:
-            raise TypeError
+            raise TypeError, "Not a valid Checksum Type: %s" % checksum_type
 
         if len(checksum_data) != _checksum_d_len[checksum_type]:
-            raise TypeError
+            raise TypeError, ("Not a valid Checksum Length: %s (%d != %d)" %
+                              (checksum_type, len(checksum_data), _checksum_d_len[checksum_type]))
 
         checksum_data = checksum_data.lower()
         if not _valid_checksum_data(checksum_data):
-            raise TypeError
+            raise TypeError, ("Not a valid Checksum: %s (%s)" %
+                              (checksum_type, checksum_data))
 
         self.checksum_type = checksum_type
         self.checksum_data = checksum_data
