@@ -51,12 +51,14 @@
                    a prefix, the checksum type, the checksum of the object
                    and the size of the object.</para>
 
+       <para>The prefix is either " " meaning the object is linked to at least one other file, so can't be removed; "*" meaning the object is newer than the configuration age; "!" meaning the object is older than the configuration age.</para>
+
         <para>
           <command>--path</command> or <command>-p </command> to use another path to a CAShe, default is too use the system CAShe in /var/cashe/CAShe.
         </para>
 
         <para>
-          <command>--sort-by</command> to sort the entires listed by filename, atime, ctime, mtime or size.
+          <command>--sort-by</command> to sort the entires listed by filename, atime, ctime, mtime, nlink or size.
         </para>
 
         </listitem>
@@ -131,6 +133,47 @@
       <varlistentry>
         <term><command>cleanup</command></term>
         <listitem><para>Cleanup bjects from the CAShe store, given the specified (or default) configuration.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><command>ls-extra</command></term>
+        <listitem><para>List extra files in the CAShe store.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><command>rm-extra</command></term>
+        <listitem><para>Remove extra files from the CAShe store.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><command>list-files</command></term>
+        <listitem><para>Works like the "list" command, but just displays the filename for the objects and the sort must be by timestamp.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><command>recent</command></term>
+        <listitem><para>Works like the "list-files" command, but only displays the last 10 objects.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><command>rsync-from</command></term>
+        <listitem><para>Rsync files to another CAShe store from the CAShe store at a specified destination. This works over ssh, and if you specify just a host ending with ":" then the path for the CAShe you are using is used as the path.</para>
+        </listitem>
+        <listitem><para>This is like: rsync source CAShe</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><command>rsync-to</command></term>
+        <term><command>rsync2</command></term>
+        <listitem><para>Rsync files from the CAShe store to another CAShe store at a specified destination. This works over ssh, and if you specify just a host ending with ":" then the path for the CAShe you are using is used as the path.</para>
+        </listitem>
+        <listitem><para>This is like: rsync CAShe destination</para>
         </listitem>
       </varlistentry>
 
