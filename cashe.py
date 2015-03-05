@@ -90,7 +90,14 @@ def _link_xdev(src, dst):
             _unlink_f(out.name)
             out.delete = False
             if _link_xdev(src, out.name):
+                # From man 2 rename:
+                #  If  oldpath  and  newpath are existing hard links referring
+                # to the same file, then rename() does nothing, and returns
+                # a success status.
+                # ...yes, this is stupid.
+                _unlink_f(dst)
                 os.rename(out.name, dst)
+                return True
             return False
         if e.errno == errno.EXDEV:
             return False
