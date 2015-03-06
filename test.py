@@ -1,11 +1,14 @@
 #! /usr/bin/python -t
 
-import cashe
 import os
+import sys
 import tempfile
 import shutil
 
 import unittest
+
+sys.path.insert(0, '.')
+import cashe
 
 _tmptest = True
 

@@ -1,4 +1,5 @@
 PKGNAME = cashe
+VERSION=0.99
 PYTHON=python
 NOSETESTS=nosetests-2.6
 NOSETESTS=nosetests
@@ -44,10 +45,25 @@ install-doc: cashe.1
 install: install-py install-bin install-doc
 
 clean:
-	rm -f *.pyc *.pyo *~ cashe.1
+	rm -f *.pyc *.pyo *~ cashe.1 ${PKGNAME}-%{VERSION}.tar.gz
 
 check test:
 	@$(NOSETESTS) test.py
+
+archive: cashe.py ${PKGNAME}.spec Makefile
+	@rm -rf ${PKGNAME}-%{VERSION}.tar.gz
+	@rm -rf /tmp/${PKGNAME}-$(VERSION) /tmp/${PKGNAME}
+	@dir=$$PWD; cd /tmp; git clone $$dir ${PKGNAME}
+	@rm -rf /tmp/${PKGNAME}/.git
+	@mv /tmp/${PKGNAME} /tmp/${PKGNAME}-$(VERSION)
+	@dir=$$PWD; cd /tmp; tar cvzf $$dir/${PKGNAME}-$(VERSION).tar.gz ${PKGNAME}-$(VERSION)
+	@rm -rf /tmp/${PKGNAME}-$(VERSION)      
+	@echo "The archive is in ${PKGNAME}-$(VERSION).tar.gz"
+
+${PKGNAME}-$(VERSION).tar.gz: archive
+
+rpm: ${PKGNAME}-$(VERSION).tar.gz
+	@rpmbuild -ts ${PKGNAME}-$(VERSION).tar.gz
 
 cashe.1: man/cashe.xml
 	$(XSLTPROC) $(XSLTPROC_FLAGS_MAN) $<
