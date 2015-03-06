@@ -4,6 +4,7 @@ import os
 import sys
 import tempfile
 import shutil
+import time
 
 import unittest
 
@@ -259,15 +260,19 @@ class Cashe_tests(unittest.TestCase):
     def test3_1_cleanup(self):
         x = cashe.CAShe(self.tdir + "/test3")
 
-        def _put(d):
+        def _put(d, tm):
             datai = x.path + "/data3.1" + d
             fwrite(datai, d)
 
             co = x.get('sha256', d2s[d])
             co.save(datai, link=False)
+            # We need ordering
+            os.utime(co.filename, (tm, tm))
+            del co.size
+        now = time.time() - 100
         for num in range(1, 9):
-            _put("a"*num)
-            _put("b"*num)
+            _put("a"*num, now + num)
+            _put("b"*num, now + num + 0.5)
         fwrite(x.path + "/config", "lo = 40 \n hi = 40\n")
         self.assertEqual(16, len(list(x.ls())))
         self.assertEqual((40, 40, 8 * 60 * 60 * 24, "atime"), x._get_config())
@@ -281,15 +286,19 @@ class Cashe_tests(unittest.TestCase):
     def test3_2_cleanup(self):
         x = cashe.CAShe(self.tdir + "/test3")
 
-        def _put(d):
-            datai = x.path + "/data3.2" + d
+        def _put(d, tm):
+            datai = x.path + "/data3.1" + d
             fwrite(datai, d)
 
             co = x.get('sha256', d2s[d])
             co.save(datai, link=False)
-        for num in reversed(range(1, 9)):
-            _put("a"*num)
-            _put("b"*num)
+            # We need ordering
+            os.utime(co.filename, (tm, tm))
+            del co.size
+        now = time.time() - 100
+        for num in range(1, 9):
+            _put("a"*num, (now - num) + 0.5)
+            _put("b"*num,  now - num)
         fwrite(x.path + "/config", "lo = 40 \n hi = 40\n")
         self.assertEqual(16, len(list(x.ls())))
         self.assertEqual((40, 40, 8 * 60 * 60 * 24, "atime"), x._get_config())
@@ -298,10 +307,7 @@ class Cashe_tests(unittest.TestCase):
         fwrite(x.path + "/config", "lo = 4 \n hi = 4\n")
         self.assertEqual((4, 4, 8 * 60 * 60 * 24, "atime"), x._get_config())
         x.cleanup()
-        # It's usually 3, but if the times get really close it can be 2.
-        num = len(list(x.ls()))
-        self.assertTrue(num >= 2)
-        self.assertTrue(num <= 3)
+        self.assertEqual(3, len(list(x.ls())))
 
 
 
