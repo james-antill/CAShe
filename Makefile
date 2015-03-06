@@ -1,5 +1,6 @@
 PKGNAME = cashe
 VERSION=0.99
+RELEASE=1
 PYTHON=python
 NOSETESTS=nosetests-2.6
 NOSETESTS=nosetests
@@ -55,6 +56,7 @@ archive: cashe.py ${PKGNAME}.spec Makefile
 	@rm -rf /tmp/${PKGNAME}-$(VERSION) /tmp/${PKGNAME}
 	@dir=$$PWD; cd /tmp; git clone $$dir ${PKGNAME}
 	@rm -rf /tmp/${PKGNAME}/.git
+	@sed -i -e "s/Release: 1/Release: $(RELEASE)/" /tmp/${PKGNAME}/${PKGNAME}.spec
 	@mv /tmp/${PKGNAME} /tmp/${PKGNAME}-$(VERSION)
 	@dir=$$PWD; cd /tmp; tar cvzf $$dir/${PKGNAME}-$(VERSION).tar.gz ${PKGNAME}-$(VERSION)
 	@rm -rf /tmp/${PKGNAME}-$(VERSION)      
