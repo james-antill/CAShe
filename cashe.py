@@ -17,7 +17,8 @@ _checksum_d_len   = {"md5"    : 32,
 
 try:
     import hashlib
-    _available_checksums = set(['md5', 'sha1', 'sha256', 'sha384', 'sha512'])
+    # Add sha384 ?? When we don't support it above?
+    _available_checksums = set(['md5', 'sha1', 'sha256', 'sha512'])
 except ImportError:
     # Python-2.4.z ... gah!
     import sha

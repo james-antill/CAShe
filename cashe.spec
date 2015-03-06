@@ -51,6 +51,13 @@ make check
 make DESTDIR=$RPM_BUILD_ROOT install
 mkdir -p $RPM_BUILD_ROOT/var/cache/CAShe
 
+# Ghost files ftw...
+touch $RPM_BUILD_ROOT/var/cache/CAShe/config
+mkdir $RPM_BUILD_ROOT/var/cache/CAShe/md5
+mkdir $RPM_BUILD_ROOT/var/cache/CAShe/sha1
+mkdir $RPM_BUILD_ROOT/var/cache/CAShe/sha256
+mkdir $RPM_BUILD_ROOT/var/cache/CAShe/sha512
+
 %clean
 rm -rf $RPM_BUILD_ROOT
 
@@ -61,6 +68,10 @@ rm -rf $RPM_BUILD_ROOT
 %{python_sitelib}/cashe
 %dir /var/cache/CAShe
 %ghost /var/cache/CAShe/config
+%ghost /var/cache/CAShe/md5
+%ghost /var/cache/CAShe/sha1
+%ghost /var/cache/CAShe/sha256
+%ghost /var/cache/CAShe/sha512
 
 %files
 %{_mandir}/man*/cashe.*
