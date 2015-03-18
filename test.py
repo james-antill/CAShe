@@ -256,6 +256,7 @@ class Cashe_tests(unittest.TestCase):
         self.assertTrue(co.exists)
 
         self.assertEqual(co.size, 2)
+        self.assertEqual(len(co), co.size)
 
     def test3_1_cleanup(self):
         x = cashe.CAShe(self.tdir + "/test3")
@@ -308,6 +309,17 @@ class Cashe_tests(unittest.TestCase):
         self.assertEqual((4, 4, 8 * 60 * 60 * 24, "atime"), x._get_config())
         x.cleanup()
         self.assertEqual(3, len(list(x.ls())))
+
+    def test_reg1(self):
+        x = cashe.CAShe(self.tdir + "/test-reg1")
+
+        co = x.get('sha256', d2s['aa'])
+        self.assertEqual(co.size, 0)
+        self.assertEqual(len(co), co.size)
+        self.assertTrue(co)
+        self.assertFalse(co.exists)
+
+        self.assertEqual(0, len(list(x.ls())))
 
 
 
