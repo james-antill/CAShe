@@ -393,7 +393,7 @@ class CASheFileObj(CASheObj):
         if not tst:
             _copy_atomic(filename, self.filename)
         if checksum:
-            return self.checked_filename
+            return self.checked_filename # Sets exists internally
 
         self.exists = True
         return self.filename
@@ -646,6 +646,13 @@ def _main():
     """ CAShe test function. """
     import time
     import optparse
+    try:
+        import xattr
+        if not hasattr(xattr, 'get'):
+            xattr = None # This is a "newer" API.
+    except ImportError:
+        xattr = None
+
 
     def _ui_time(tm):
         return time.strftime("%Y-%m-%d %H:%M", time.gmtime(tm))
@@ -887,6 +894,22 @@ def _main():
                 print " C-Time:", _ui_time(obj.ctime) + suffix
             if opts.verbose:
                 print "   File:", obj.filename
+            if xattr:
+                # See: http://www.freedesktop.org/wiki/CommonExtendedAttributes
+                try:
+                    xd = xattr.get(obj.filename, 'user.xdg.origin.url')
+                    print ".origin:", xd
+                except IOError, e:
+                    ok = False
+                    if e.errno in (errno.ENODATA,
+                                   errno.EOPNOTSUPP, errno.E2BIG, errno.ERANGE):
+                        ok = True
+                    for me in ("ENOATTR", "ENOTSUPP"):
+                        if hasattr(errno, me) and e.errno == getattr(errno, me):
+                            ok = True
+                            break
+                    if not ok:
+                        raise
 
     if cmd == "load":
         if len(cmds) != 4:
@@ -1004,7 +1027,6 @@ def _main():
             print obj.filename
 
     def _rsync_cmd(src, dst, src_local=False):
-        # "--exclude=config" ... just do checksum dirs
         # --ignore-existing vs. --size-only ?
         # "--ignore-missing-args" is what we want, but is fairly new
         # rcmd = ["rsync", "--recursive", "--size-only", "--links"]
