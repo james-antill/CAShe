@@ -749,7 +749,7 @@ def _main():
     (opts, cmds) = argp.parse_args()
 
     if opts.sort_by not in ("filename", "size",
-                            "atime", "ctime", "mtime", "nlink"):
+                            "atime", "ctime", "mtime", "nlink", "time"):
         opts.sort_by = "filename"    
 
     objs = CAShe(opts.path)
@@ -765,6 +765,8 @@ def _main():
 
 
     (lo, hi, age, tsort_by) = objs._get_config()
+    if opts.sort_by == "time":
+        opts.sort_by = tsort_by
     if cmd == "config":
         (dlo, dhi, dage, dtsort_by) = objs._get_config_def()
         def _dtxt(dconfig, config):
