@@ -64,7 +64,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files -n python-cashe
 %defattr(-,root,root,-)
-%doc README.md AUTHORS COPYING TODO
+%doc README.md AUTHORS LICENSE TODO
 %{python_sitelib}/cashe
 %dir /var/cache/CAShe
 %ghost /var/cache/CAShe/config
