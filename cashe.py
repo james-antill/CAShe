@@ -293,8 +293,7 @@ class CASheFileObj(CASheObj):
         self.root = root
         self.link = True
 
-    def __len__(self):
-        return self.size
+    # Don't have a __len__ because then we can bool(obj) for existance
 
     def _getFilename(self):
         if getattr(self, "_filename", None) is None:

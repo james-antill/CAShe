@@ -160,7 +160,7 @@ class Cashe_tests(unittest.TestCase):
 
         co = x.get('sha256', d2s['b'])
         ret = co.load(datao, checksum=True)
-        self.assertEqual(len(co), 1)
+        self.assertEqual(co.size, 1)
         self.assertFileEqual(datai, datao)
         self.assertFileEqual(datai, co.filename)
         self.assertPathLinks(datai, 3)
@@ -213,7 +213,7 @@ class Cashe_tests(unittest.TestCase):
 
         co = x.get('sha256', d2s['b'])
         ret = co.load(datao, checksum=True)
-        self.assertEqual(len(co), 1)
+        self.assertEqual(co.size, 1)
         self.assertFileEqual(datai, datao)
         self.assertFileEqual(datai, co.filename)
         self.assertPathLinks(datai, 1)
@@ -244,7 +244,7 @@ class Cashe_tests(unittest.TestCase):
         self.assertPathLinks(datai, 1)
         self.assertPathNotExists(datao)
 
-        self.assertEqual(len(co), 1)
+        self.assertEqual(co.size, 1)
 
         co = x.get('sha256', d2s['aa'])
         ret = co.save(datai)
@@ -255,7 +255,7 @@ class Cashe_tests(unittest.TestCase):
         self.assertEqual(2, len(list(x.ls())))
         self.assertTrue(co.exists)
 
-        self.assertEqual(len(co), 2)
+        self.assertEqual(co.size, 2)
 
     def test3_1_cleanup(self):
         x = cashe.CAShe(self.tdir + "/test3")
