@@ -698,6 +698,22 @@ def _main():
     except ImportError:
         xattr = None
 
+    def _ui_origin_url(filename):
+        # See: http://www.freedesktop.org/wiki/CommonExtendedAttributes
+        try:
+            return xattr.get(filename, 'user.xdg.origin.url')
+        except IOError, e:
+            ok = False
+            if e.errno in (errno.ENODATA,
+                           errno.EOPNOTSUPP, errno.E2BIG, errno.ERANGE):
+                ok = True
+            for me in ("ENOATTR", "ENOTSUPP"):
+                if hasattr(errno, me) and e.errno == getattr(errno, me):
+                    ok = True
+                    break
+            if not ok:
+                raise
+        return ''
 
     def _ui_time(tm):
         return time.strftime("%Y-%m-%d %H:%M", time.gmtime(tm))
@@ -888,19 +904,26 @@ def _main():
         print "--All--:", len(Ts) - 1
         _prnt_summary(Ts['.'])
 
+    def _prnt_list(obj):
+        if obj.nlink > 1:
+            prefix = " "
+        elif objs._is_new(obj, tsort_by, age, now):
+            prefix = "*"
+        else:
+            prefix = "!"
+        print "%s%-6s %-64s %s" % (prefix, obj.checksum_type,
+                                   obj.checksum_data, _ui_num(obj.size))
+        if opts.verbose:
+            xd = _ui_origin_url(obj.filename)
+            if xd:
+                print " \_", xd
+
     if cmd == "list":
         now = time.time()
         T, D = _get_T_D(cmds)
 
         for obj in _get_objs(objs, opts, T, D):
-            if obj.nlink > 1:
-                prefix = " "
-            elif objs._is_new(obj, tsort_by, age, now):
-                prefix = "*"
-            else:
-                prefix = "!"
-            print "%s%-6s %-64s %s" % (prefix, obj.checksum_type,
-                                       obj.checksum_data, _ui_num(obj.size))
+            _prnt_list(obj)
 
     if cmd == "check":
         now = time.time()
@@ -927,39 +950,21 @@ def _main():
             done = True
             print "Type:", obj.checksum_type
             print "Data:", obj.checksum_data
-            print "   Size:", _ui_num(obj.size)
+            suffix = ""
+            if not objs._is_new(obj, tsort_by, age, now):
+                suffix = "(old)"
+            print "   Size:", _ui_num(obj.size), suffix
             print "  Links:", _ui_num(obj.nlink - 1)
-            suffix = ""
-            if tsort_by == "mtime" and objs._is_new(obj, tsort_by, age, now):
-                suffix = " (old)"
-            print " M-Time:", _ui_time(obj.mtime) + suffix
-            suffix = ""
-            if tsort_by == "atime" and objs._is_new(obj, tsort_by, age, now):
-                suffix = " (old)"
-            print " A-Time:", _ui_time(obj.atime) + suffix
-            suffix = ""
-            if tsort_by == "ctime" and objs._is_new(obj, tsort_by, age, now):
-                suffix = " (old)"
+            print " M-Time:", _ui_time(obj.mtime)
+            print " A-Time:", _ui_time(obj.atime)
             if opts.verbose or tsort_by == "ctime":
-                print " C-Time:", _ui_time(obj.ctime) + suffix
+                print " C-Time:", _ui_time(obj.ctime)
             if opts.verbose:
                 print "   File:", obj.filename
             if xattr:
-                # See: http://www.freedesktop.org/wiki/CommonExtendedAttributes
-                try:
-                    xd = xattr.get(obj.filename, 'user.xdg.origin.url')
+                xd = _ui_origin_url(obj.filename)
+                if xd:
                     print ".origin:", xd
-                except IOError, e:
-                    ok = False
-                    if e.errno in (errno.ENODATA,
-                                   errno.EOPNOTSUPP, errno.E2BIG, errno.ERANGE):
-                        ok = True
-                    for me in ("ENOATTR", "ENOTSUPP"):
-                        if hasattr(errno, me) and e.errno == getattr(errno, me):
-                            ok = True
-                            break
-                    if not ok:
-                        raise
 
     if cmd == "load":
         if len(cmds) != 4:
@@ -1061,9 +1066,12 @@ def _main():
     if cmd == "recent":
         if opts.sort_by not in ("atime", "ctime", "mtime"):
             opts.sort_by = "mtime"
+        now = time.time()
         T, D = _get_T_D(cmds)
 
-        num = 10 # 20 for a normal term. but sha256 wraps the line
+        num = 22 # Normal term height
+        if opts.verbose:
+            num = 6 # URLs can be 2 lines
         a1 = []
         a2 = []
         for obj in _get_objs(objs, opts, T, D):
@@ -1072,9 +1080,9 @@ def _main():
                 a2 = a1
                 a1 = []
         for obj in a2[len(a1):]:
-            print obj.filename
+            _prnt_list(obj)
         for obj in a1:
-            print obj.filename
+            _prnt_list(obj)
 
     def _rsync_cmd(src, dst, src_local=False):
         # --ignore-existing vs. --size-only ?
