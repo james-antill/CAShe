@@ -384,7 +384,15 @@ class CASheFileObj(CASheObj):
                      doc="Number of links to the checksummed object in the cache (cached)")
 
     def save(self, filename, checksum=True, link=None):
-        """ Save the file, as an object, into the CAShe storage. """
+        """ Save the file, as an object, into the CAShe storage.
+
+        :param filename: a string specifying the path to link/read from
+        :param checksum: a boolean specifying if we should perform a
+                         checksum of the data (default True)
+        :param link: should we try using link to store the data
+        """
+        if False:
+            print "JDBG:", "save:", filename, checksum, link, self.link
         if link is None:
             link = self.link
         try:
@@ -407,7 +415,15 @@ class CASheFileObj(CASheObj):
         return self.filename
 
     def load(self, filename, checksum=False, link=None):
-        """ Load the object, from the CAShe storage, to a file. """
+        """ Load the object, from the CAShe storage, to a file.
+
+        :param filename: a string specifying the path to link/write to
+        :param checksum: a boolean specifying if we should perform a
+                         checksum of the data (default False)
+        :param link: should we try using link to retrieve the data
+        """
+        if False:
+            print "JDBG:", "load:", filename, checksum, link, self.link
         if checksum: # FIXME: This can load it twice ... meh.
             if self.checked_filename is None:
                 return None
@@ -428,12 +444,15 @@ class CASheFileObj(CASheObj):
         return filename
 
     def get(self, *args, **kwargs):
+        " Same as .load() "
         self.load(*args, **kwargs)
 
     def put(self, *args, **kwargs):
+        " Same as .save() "
         self.save(*args, **kwargs)
 
     def unlink(self):
+        """ Remove the checksummed object from the cache. """
         if _unlink_f(self.filename):
             _try_rmdir(self.dirname)
         self.exists = False
@@ -464,6 +483,12 @@ class CAShe(object):
         return True
 
     def get(self, checksum_type, checksum_data):
+        """ Get an object for the specified checksum.
+
+        :param checksum_type: a string specifying the type of checksum,
+                              Eg. md5, sha256
+        :param checksum_data: a string specifying the hexdigest of the checksum.
+        """
         T = _checksum_aliases.get(checksum_type, checksum_type)
         if T not in self._objs:
             raise TypeError, "Not a valid Checksum Type: %s" % T
@@ -475,10 +500,19 @@ class CAShe(object):
         return self._objs[T][checksum_data]
 
     def rm(self, obj):
+        """ Remove an object from the cache.
+
+        :param obj: an object returned by .get()
+        """
         obj.unlink()
         del self._objs[obj.checksum_type][obj.checksum_data]
 
     def ls(self, checksum_type=None):
+        """ Yield all objects stored in the cache.
+
+        :param checksum_type: a string specifying the type of checksum, or None
+                              for all checksums. Eg. md5, sha256.
+        """
         checksum_type = _checksum_aliases.get(checksum_type, checksum_type)
 
         for T in sorted(self._objs):
@@ -597,6 +631,9 @@ class CAShe(object):
         return True
 
     def cleanup(self):
+        """ Remove objects from the cache to being it within the configured
+        limits (the "config" file at the root of the cashe).
+        """
         import time
         (lo, hi, age, sort_by) = self._get_config()
 
