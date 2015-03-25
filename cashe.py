@@ -688,9 +688,78 @@ class CAShe(object):
                 deleted_size + hdeleted_size)
 
 def _main():
-    """ CAShe test function. """
-    import time
+    """ CAShe test function, setup opts. """
     import optparse
+
+    remap_cmds = {'rsync2' : 'rsync-to',
+                  'usage' : 'help',
+                  'ls' : 'list',
+                  'rm' : 'unlink',
+                  'gc' : 'cleanup',
+                  'conf' : 'config',
+                  'ls-extras' : 'ls-extra',
+                  'rm-extras' : 'rm-extra'}
+    all_cmds = ("summary", "list", "info", "check",
+                "load", "save", "save-fast", "unlink",
+                "cleanup", "ls-extra", "rm-extra", "list-files", "recent",
+                "rsync-from", "rsync-to",
+                "config", "help")
+
+    argp = optparse.OptionParser(
+            description='Access CAShe storage from the command line',
+        version="%prog-" + __version__)
+    epilog = "\n    ".join(["\n\nCOMMANDS:"]+sorted(all_cmds)) + "\n"
+    argp.format_epilog = lambda y: epilog
+    argp.add_option('-v',
+            '--verbose', default=False, action='store_true',
+            help='verbose output from commands')
+    argp.add_option(
+            '--path', default="/var/cache/CAShe",
+            help='path to the CAShe storage, defaults to the system cache')
+    argp.add_option('-p',
+            '--preserve', default=False, action='store_true',
+            help='preserve filetimes when using rsync')
+    argp.add_option(
+            '--sort-by', default="filename",
+            help='what to sort list/info command by')
+    argp.add_option('--link', default=None, action='store_true',
+            help='try to link in load/save operations (default)')
+    argp.add_option('--copy-only', dest='link', action='store_false',
+            help='try to link in load/save operations')
+    (opts, cmds) = argp.parse_args()
+
+    if argp.prog is not None:
+        prog = argp.prog
+    elif sys.argv:
+        prog = os.path.basename(sys.argv[0])
+    else:
+        prog = "CAShe"
+
+    if opts.sort_by not in ("filename", "size",
+                            "atime", "ctime", "mtime", "nlink", "time"):
+        opts.sort_by = "filename"
+
+    cmd = "summary"
+    if len(cmds) >= 1:
+        cmd = remap_cmds.get(cmds[0], cmds[0])
+        if cmd not in all_cmds:
+            argp.print_help()
+            sys.exit(1)
+
+    if cmd == "help":
+        argp.print_help()
+        return
+
+    if opts.verbose:
+        return _main_cmds(opts, cmds, cmd)
+    try:
+        return _main_cmds(opts, cmds, cmd)
+    except Exception, e:
+        print >>sys.stderr, "Error:", str(e)
+
+def _main_cmds(opts, cmds, cmd):
+    """ CAShe test function, run commands. """
+    import time
     try:
         import xattr
         if not hasattr(xattr, 'get'):
@@ -784,49 +853,11 @@ def _main():
             if D is not None and not obj.checksum_data.startswith(D):
                 continue
             yield obj
-    all_cmds = ("summary", "list", "info", "check",
-                "load", "save", "save-fast", "unlink",
-                "cleanup", "ls-extra", "rm-extra", "list-files", "recent", 
-                "rsync-from", "rsync-to", "rsync2",
-                "config", "help")
-    argp = optparse.OptionParser(
-            description='Access CAShe storage from the command line',
-        version="%prog-" + __version__)
-    epilog = "\n    ".join(["\n\nCOMMANDS:"]+sorted(all_cmds)) + "\n"
-    argp.format_epilog = lambda y: epilog
-    argp.add_option('-v',
-            '--verbose', default=False, action='store_true',
-            help='verbose output from commands')
-    argp.add_option(
-            '--path', default="/var/cache/CAShe",
-            help='path to the CAShe storage, defaults to the system cache')
-    argp.add_option('-p',
-            '--preserve', default=False, action='store_true',
-            help='preserve filetimes when using rsync')
-    argp.add_option(
-            '--sort-by', default="filename",
-            help='what to sort list/info command by')
-    argp.add_option('--link', default=True, action='store_true',
-            help='try to link in load/save operations (default)')
-    argp.add_option('--copy-only', dest='link', action='store_false',
-            help='try to link in load/save operations')
-    (opts, cmds) = argp.parse_args()
 
-    if opts.sort_by not in ("filename", "size",
-                            "atime", "ctime", "mtime", "nlink", "time"):
-        opts.sort_by = "filename"    
-
+    # Actual start of main()
     objs = CAShe(opts.path)
-    if not opts.link:
+    if opts.link is not None and not opts.link:
         objs.link = False
-
-    cmd = "summary"
-    if len(cmds) >= 1:
-        if cmds[0] in all_cmds:
-            cmd = cmds[0]
-        else:
-            cmd = "help"
-
 
     (lo, hi, age, tsort_by) = objs._get_config()
     if opts.sort_by == "time":
@@ -842,9 +873,6 @@ def _main():
         print "        Age(%s):" % _dtxt(dage, age), _ui_age(age)
         print "       Time(%s):" % _dtxt(dtsort_by, tsort_by), tsort_by
         print "       Path(%s):" %_dtxt("/var/cache/CAShe", objs.path),objs.path
-
-    if cmd == "help":
-        argp.print_help()
 
     if cmd == "summary":
         T = None
@@ -968,12 +996,16 @@ def _main():
 
     if cmd == "load":
         if len(cmds) != 4:
-            print >>sys.stderr, argp.prog, "load <type> <data> <filename>"
+            print >>sys.stderr, prog, "load <type> <data> <filename>"
             sys.exit(1)
         obj = objs.get(cmds[1], cmds[2])
         obj.load(cmds[3])
 
     if cmd == "save":
+        if opts.link is None:
+            cas_path_uid = os.stat(objs.path).st_uid
+
+        count = 0
         if len(cmds) == 3:
             data     = _file2hexdigest(cmds[1], cmds[2])
             filename = cmds[2]
@@ -986,26 +1018,38 @@ def _main():
             for filename in cmds[2:]:
                 data = _file2hexdigest(cmds[1], filename)
                 obj  = objs.get(cmds[1], data)
-                obj.save(filename, checksum=False)
+                if opts.link is None:
+                    if os.stat(filename).st_uid != cas_path_uid:
+                        obj.link = False
+                if obj.save(filename, checksum=False):
+                    count += 1
             data     = None
         else:
-            print >>sys.stderr, argp.prog, "save <type> [data] <filename> [...]"
+            print >>sys.stderr, prog, "save <type> [data] <filename> [...]"
             sys.exit(1)
 
         if data is not None:
             obj = objs.get(cmds[1], data)
-            obj.save(filename, checksum=checksum)
+            if opts.link is None:
+                if os.stat(filename).st_uid != cas_path_uid:
+                    obj.link = False
+            if obj.save(filename, checksum=checksum):
+                count += 1
+        print "Saved %u object(s) into the CAShe" % count
 
     if cmd == "save-fast":
         if len(cmds) != 4:
-            print >>sys.stderr, argp.prog, "save-fast <type> <data> <filename>"
+            print >>sys.stderr, prog, "save-fast <type> <data> <filename>"
             sys.exit(1)
         obj = objs.get(cmds[1], cmds[2])
+        if opts.link is None:
+            if os.stat(cmds[3]).st_uid != os.stat(objs.path).st_uid:
+                obj.link = False
         obj.save(cmds[3], checksum=False)
 
     if cmd == "unlink":
         if len(cmds) != 3:
-            print >>sys.stderr, argp.prog, "unlink <type> <data>"
+            print >>sys.stderr, prog, "unlink <type> <data>"
             sys.exit(1)
         obj = objs.get(cmds[1], cmds[2])
         obj.unlink()
@@ -1111,7 +1155,7 @@ def _main():
 
     if cmd in ("rsync-to", "rsync2"):
         if len(cmds) != 2:
-            print >>sys.stderr, argp.prog, cmd, "<destination>"
+            print >>sys.stderr, prog, cmd, "<destination>"
             sys.exit(1)
 
         if cmds[1].endswith(":"):
@@ -1123,7 +1167,7 @@ def _main():
 
     if cmd == "rsync-from":
         if len(cmds) != 2:
-            print >>sys.stderr, argp.prog, cmd, "<source>"
+            print >>sys.stderr, prog, cmd, "<source>"
             sys.exit(1)
 
         if cmds[1].endswith(":"):
@@ -1135,7 +1179,7 @@ def _main():
 
     if cmd == "checksum-file":
         if len(cmds) != 3:
-            print >>sys.stderr, argp.prog, "checksum-file <type> <filename>"
+            print >>sys.stderr, prog, "checksum-file <type> <filename>"
             sys.exit(1)
         data = _file2hexdigest(cmds[1], cmds[2])
         if data is not None:
