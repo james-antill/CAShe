@@ -1,5 +1,8 @@
 #! /usr/bin/python -tt
 
+__version__ = '0.99.1'
+__version_info__ = tuple([ int(num) for num in __version__.split('.')])
+
 import sys # Only needed for stderr and exit()
 
 import os
@@ -735,15 +738,18 @@ def _main():
                 "config", "help")
     argp = optparse.OptionParser(
             description='Access CAShe storage from the command line',
-        version="%prog-1.0.0")
+        version="%prog-" + __version__)
     epilog = "\n    ".join(["\n\nCOMMANDS:"]+sorted(all_cmds)) + "\n"
     argp.format_epilog = lambda y: epilog
     argp.add_option('-v',
             '--verbose', default=False, action='store_true',
             help='verbose output from commands')
-    argp.add_option('-p',
+    argp.add_option(
             '--path', default="/var/cache/CAShe",
             help='path to the CAShe storage, defaults to the system cache')
+    argp.add_option('-p',
+            '--preserve', default=False, action='store_true',
+            help='preserve filetimes when using rsync')
     argp.add_option(
             '--sort-by', default="filename",
             help='what to sort list/info command by')
@@ -1040,6 +1046,8 @@ def _main():
         rcmd = ["rsync", "--recursive", "--ignore-existing", "--links"]
         if opts.verbose:
             rcmd.extend(["--verbose", "--progress"])
+        if opts.preserve:
+            rcmd.extend(["--preserve"])
         done = False
         for chk in _checksum_d_len:
             chkdir = "%s/%s" % (src, chk)
