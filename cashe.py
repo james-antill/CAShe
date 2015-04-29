@@ -1087,12 +1087,18 @@ def _main_cmds(opts, cmds, cmd):
         for f in _y_extras():
             print f
     if cmd == "rm-extra":
+        now = time.time()
         for f in _y_extras():
             try:
-                if _unlink_f(f):
+                fmtime = os.stat(f).st_mtime
+                if fmtime > now:
+                    fmtime = 1
+                if fmtime > (now - (60 * 60 * 8)): # Config?
+                    print " ** ", f
+                elif _unlink_f(f):
                     print "rm", f
                 else:
-                    print " ** ", f
+                    print " !! ", f
                     continue
             except OSError, e:
                 if e.errno == errno.EISDIR:
