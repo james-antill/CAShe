@@ -8,7 +8,7 @@
 
 Summary: CAShe user program
 Name: cashe
-Version: 0.99
+Version: 0.99.1
 Release: 1%{dist}
 License: LGPL+
 URL: https://github.com/james-antill/CAShe
@@ -64,7 +64,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files -n python-cashe
 %defattr(-,root,root,-)
-%doc README.md AUTHORS LICENSE TODO
+%doc README.md AUTHORS LICENSE TODO DESIGN.md
 %{python_sitelib}/cashe
 %dir /var/cache/CAShe
 %ghost /var/cache/CAShe/config
