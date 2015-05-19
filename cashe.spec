@@ -6,13 +6,13 @@
 %define python_sitelib /usr/lib/python?.?/site-packages
 %endif
 
-Summary: CAShe user program
+Summary: CAS (Content Addressable Storage) cache for your data/caches.
 Name: cashe
 Version: 0.99.1
 Release: 1%{dist}
-License: LGPL+
+License: LGPLv2+
 URL: https://github.com/james-antill/CAShe
-Source0: %{name}-%{version}.tar.gz
+Source0: https://github.com/james-antill/CAShe/archive/v%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 BuildRequires: python
 BuildRequires: libxslt docbook-dtds docbook-style-xsl docbook-style-dsssl
