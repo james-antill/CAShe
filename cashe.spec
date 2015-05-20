@@ -6,7 +6,7 @@
 %define python_sitelib /usr/lib/python?.?/site-packages
 %endif
 
-Summary: CAS (Content Addressable Storage) cache for your data/caches.
+Summary: CAS (Content Addressable Storage) cache for your data/caches
 Name: cashe
 Version: 0.99.2
 Release: 1%{dist}
