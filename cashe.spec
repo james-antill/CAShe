@@ -8,11 +8,11 @@
 
 Summary: CAS (Content Addressable Storage) cache for your data/caches.
 Name: cashe
-Version: 0.99.1
+Version: 0.99.2
 Release: 1%{dist}
 License: LGPLv2+
 URL: https://github.com/james-antill/CAShe
-Source0: https://github.com/james-antill/CAShe/archive/v%{version}.tar.gz
+Source0: https://github.com/james-antill/CAShe/archive/v%{version}.tar.gz/%{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 BuildRequires: python
 BuildRequires: libxslt docbook-dtds docbook-style-xsl docbook-style-dsssl
@@ -79,7 +79,7 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
-* Tue May 19 2015 James Antill <james@and.org> - 0.99.1-1
+* Tue May 19 2015 James Antill <james@and.org> - 0.99.2-1
 - Tweaks for Fedora policy review.
 
 * Wed Feb 25 2015 James Antill <james@and.org> - 0.99-1

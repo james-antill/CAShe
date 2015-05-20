@@ -1,5 +1,5 @@
 PKGNAME = cashe
-VERSION=0.99.1
+VERSION=0.99.2
 RELEASE=1
 PYTHON=python
 NOSETESTS=nosetests-2.6
