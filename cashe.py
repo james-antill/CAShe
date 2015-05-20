@@ -382,6 +382,16 @@ class CASheFileObj(CASheObj):
     nlink = property(fget=lambda self: self._getNlink(),
                      fdel=lambda self: self._delStatVal(),
                      doc="Number of links to the checksummed object in the cache (cached)")
+    def _getIno(self):
+        return self._getStatVal("st_ino")
+    st_ino = property(fget=lambda self: self._getIno(),
+                      fdel=lambda self: self._delStatVal(),
+                      doc="Inode of underlying checksummed object in the cache (cached)")
+    def _getDev(self):
+        return self._getStatVal("st_dev")
+    st_dev = property(fget=lambda self: self._getDev(),
+                      fdel=lambda self: self._delStatVal(),
+                      doc="Device of underlying checksummed object in the cache (cached)")
 
     def save(self, filename, checksum=True, link=None):
         """ Save the file, as an object, into the CAShe storage.
