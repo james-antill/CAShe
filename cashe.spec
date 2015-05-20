@@ -79,6 +79,9 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Tue May 19 2015 James Antill <james@and.org> - 0.99.1-1
+- Tweaks for Fedora policy review.
+
 * Wed Feb 25 2015 James Antill <james@and.org> - 0.99-1
 - Initial build.
 

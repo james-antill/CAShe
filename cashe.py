@@ -700,6 +700,7 @@ class CAShe(object):
 def _main():
     """ CAShe test function, setup opts. """
     import optparse
+    global prog
 
     remap_cmds = {'rsync2' : 'rsync-to',
                   'usage' : 'help',
@@ -710,7 +711,7 @@ def _main():
                   'ls-extras' : 'ls-extra',
                   'rm-extras' : 'rm-extra'}
     all_cmds = ("summary", "list", "info", "check",
-                "load", "save", "save-fast", "unlink",
+                "load", "save", "save-fast", "merge", "unlink",
                 "cleanup", "ls-extra", "rm-extra", "list-files", "recent",
                 "rsync-from", "rsync-to",
                 "config", "help")
@@ -770,6 +771,7 @@ def _main():
 def _main_cmds(opts, cmds, cmd):
     """ CAShe test function, run commands. """
     import time
+    import stat
     try:
         import xattr
         if not hasattr(xattr, 'get'):
@@ -1011,6 +1013,46 @@ def _main_cmds(opts, cmds, cmd):
         obj = objs.get(cmds[1], cmds[2])
         obj.load(cmds[3])
 
+    if cmd == "merge":
+        if opts.link is None:
+            cas_path_uid = os.stat(objs.path).st_uid
+
+        if len(cmds) < 2:
+            print >>sys.stderr, prog, "merge <type> <filename> [...]"
+            sys.exit(1)
+
+        counts = [0, 0]
+        def _merge_file(filename):
+            st   = os.stat(filename)
+            if stat.S_ISDIR(st.st_mode):
+                for fname in os.listdir(filename):
+                    _merge_file("%s/%s" % (filename, fname))
+                return
+
+            if opts.verbose:
+                print " File:", filename
+
+            data = _file2hexdigest(cmds[1], filename)
+            obj  = objs.get(cmds[1], data)
+
+            if obj.exists:
+                if obj.st_dev == st.st_dev and obj.st_ino == st.st_ino:
+                    return
+
+                # FIXME: Need link only...
+                if opts.link is not False and obj.load(filename):
+                    counts[1] += 1
+                return
+
+            if opts.link is None:
+                if st.st_uid != cas_path_uid:
+                    obj.link = False
+            if obj.save(filename, checksum=False):
+                counts[0] += 1
+        for filename in cmds[2:]:
+            _merge_file(filename)
+        print "Merged %u object(s) into the CAShe, %u from it" % tuple(counts)
+
     if cmd == "save":
         if opts.link is None:
             cas_path_uid = os.stat(objs.path).st_uid
@@ -1026,6 +1068,8 @@ def _main_cmds(opts, cmds, cmd):
             checksum = True
         elif len(cmds) >= 4:
             for filename in cmds[2:]:
+                if opts.verbose:
+                    print " File:", filename
                 data = _file2hexdigest(cmds[1], filename)
                 obj  = objs.get(cmds[1], data)
                 if opts.link is None:
