@@ -1,6 +1,11 @@
 PKGNAME = cashe
 VERSION=0.99.2
 RELEASE=1
+GITNAME=CAShe
+# 1549852fd1c2805ba6329309f97d11190c37256e = 0.99.2
+# 744ca5ed19aab7762f4a536967c3fdbdc2b2751a = 0.99.2 post reviewed Fedora
+COMMIT=744ca5ed19aab7762f4a536967c3fdbdc2b2751a
+
 PYTHON=python
 NOSETESTS=nosetests-2.6
 NOSETESTS=nosetests
@@ -30,7 +35,7 @@ all: cashe.1
 install-py:
 	mkdir -p $(DESTDIR)/$(PKGDIR)
 	for p in $(PYFILES) ; do \
-		install -m 644 $$p $(DESTDIR)/$(PKGDIR)/$$p; \
+		install -m 755 $$p $(DESTDIR)/$(PKGDIR)/$$p; \
 	done
 	$(PYTHON) -c "import compileall; compileall.compile_dir('$(DESTDIR)/$(PKGDIR)', 1, '$(PKGDIR)', 1)"
 
@@ -64,8 +69,20 @@ archive: cashe.py ${PKGNAME}.spec Makefile
 
 ${PKGNAME}-$(VERSION).tar.gz: archive
 
+archive: cashe.py ${PKGNAME}.spec Makefile
+
+$(GITNAME)-$(COMMIT).tar.gz:
+	curl --location -O https://github.com/james-antill/${GITNAME}/archive/${COMMIT}/${GITNAME}-$(COMMIT).tar.gz
+
 rpm: ${PKGNAME}-$(VERSION).tar.gz
 	@rpmbuild -ts ${PKGNAME}-$(VERSION).tar.gz
+fedrpm: ${GITNAME}-$(COMMIT).tar.gz
+	@rm -rf /tmp/${PKGNAME}-$(COMMIT)
+	@mkdir /tmp/${PKGNAME}-$(COMMIT)
+	@cp -a ${PKGNAME}.spec /tmp/${PKGNAME}-$(COMMIT)
+	@sed -i -e "s/Release: 1/Release: $(RELEASE)/" /tmp/${PKGNAME}-$(COMMIT)/${PKGNAME}.spec
+	@sed -i -e "s/global commit .*/global commit $(COMMIT)/" /tmp/${PKGNAME}-$(COMMIT)/${PKGNAME}.spec
+	@rpmbuild --define="_sourcedir $$PWD" -bs /tmp/${PKGNAME}-$(COMMIT)/${PKGNAME}.spec
 
 cashe.1: man/cashe.xml
 	$(XSLTPROC) $(XSLTPROC_FLAGS_MAN) $<

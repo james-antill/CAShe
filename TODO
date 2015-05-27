@@ -1,5 +1,4 @@
- --merge for load?
- More design/reimplement docs.
+ xattr for filenames.
  ignore permission denied?
  Aliases (symlinks for other checksums)?
  C version.
