@@ -50,7 +50,7 @@ that will mainly happen when cleanup operations are called or on failures.
 %setup -qn %{gitname}-%{commit}
 
 %build
-make
+make %{_smp_mflags}
 
 %check
 make check
