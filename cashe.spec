@@ -14,7 +14,7 @@
 
 Summary: CAS (Content Addressable Storage) cache for your data/caches
 Name: cashe
-Version: 0.99.2
+Version: 0.99.3
 Release: 1%{?dist}
 License: LGPLv2+
 URL: https://github.com/james-antill/CAShe
