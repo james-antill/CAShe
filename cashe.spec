@@ -1,9 +1,9 @@
-%define auto_sitelib 1
+%global auto_sitelib 1
 
 %if %{auto_sitelib}
-%{!?python_sitelib: %define python_sitelib %(python -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
+%{!?python_sitelib: %global python_sitelib %(python -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 %else
-%define python_sitelib /usr/lib/python?.?/site-packages
+%global python_sitelib /usr/lib/python?.?/site-packages
 %endif
 
 # Sigh ... also see commit in Makefile
