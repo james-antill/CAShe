@@ -8,8 +8,9 @@
 
 # Sigh ... also see commit in Makefile
 # 1549852fd1c2805ba6329309f97d11190c37256e = 0.99.2
+# 3a280a79ac80b4aeba3db787858afb2caa8f1f8b = 0.99.3
 %global gitname CAShe
-%global commit 1549852fd1c2805ba6329309f97d11190c37256e
+%global commit 3a280a79ac80b4aeba3db787858afb2caa8f1f8b
 %global shortcommit %(c=%{commit}; echo ${c:0:7})
 
 Summary: CAS (Content Addressable Storage) cache for your data/caches
