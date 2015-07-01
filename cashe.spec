@@ -1,3 +1,5 @@
+%{!?_licensedir:%global license %doc}
+
 %global auto_sitelib 1
 
 %if %{auto_sitelib}
